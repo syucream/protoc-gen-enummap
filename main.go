@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/golang/protobuf/proto"
@@ -38,11 +37,6 @@ func appendNestedEnum(file []*plugin.CodeGeneratorResponse_File, formatter enumF
 	return file
 }
 
-func getFilename(path string) string {
-	withExt := strings.Replace(path, "/", "_", -1)
-	return withExt[:len(withExt)-len(filepath.Ext(withExt))]
-}
-
 func main() {
 	buf, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
@@ -61,7 +55,7 @@ func main() {
 
 	resp := plugin.CodeGeneratorResponse{}
 	for _, f := range req.GetProtoFile() {
-		filename := getFilename(f.GetName()) + "__"
+		filename := strings.Replace(f.GetPackage(), ".", "_", -1) + "__"
 
 		for _, e := range f.GetEnumType() {
 			var contents []string
