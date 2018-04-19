@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+enum Status {
+  UNKNOWN = 0;
+  STARTED = 1;
+  RUNNING = 2;
+}
+
+message Foo {
+  enum Status {
+    UNKNOWN = 0;
+    STARTED = 1;
+    RUNNING = 2;
+  }
+}

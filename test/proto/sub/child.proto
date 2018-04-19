@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+message Bar {
+  enum Status {
+    UNKNOWN = 0;
+    STARTED = 1;
+    RUNNING = 2;
+  }
+}
