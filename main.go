@@ -61,7 +61,7 @@ func main() {
 
 	resp := plugin.CodeGeneratorResponse{}
 	for _, f := range req.GetProtoFile() {
-		filename := getFilename(f.GetName()) + "_"
+		filename := getFilename(f.GetName()) + "__"
 
 		for _, e := range f.GetEnumType() {
 			var contents []string

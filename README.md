@@ -52,17 +52,17 @@ $ protoc -I. --plugin=./protoc-gen-enummap --enummap_opt=jsonl --enummap_out=./t
 
 ```
 $ ls test/dest/
-test_proto_root_Foo_Status.jsonl  test_proto_root_Status.jsonl  test_proto_sub_child_Bar_Status.jsonl
+test_proto_root__Foo_Status.jsonl  test_proto_root__Status.jsonl  test_proto_sub_child__Bar_Status.jsonl
 
-$ cat test/dest/test_proto_root_Foo_Status.jsonl
+$ cat test/dest/test_proto_root__Foo_Status.jsonl
 {"number": 0, "name": "UNKNOWN"}
 {"number": 1, "name": "STARTED"}
 {"number": 2, "name": "RUNNING"}
-$ cat test/dest/test_proto_root_Status.jsonl
+$ cat test/dest/test_proto_root__Status.jsonl
 {"number": 0, "name": "UNKNOWN"}
 {"number": 1, "name": "STARTED"}
 {"number": 2, "name": "RUNNING"}
-$ cat test/dest/test_proto_sub_child_Bar_Status.jsonl
+$ cat test/dest/test_proto_sub_child__Bar_Status.jsonl
 {"number": 0, "name": "UNKNOWN"}
 {"number": 1, "name": "STARTED"}
 {"number": 2, "name": "RUNNING"}
