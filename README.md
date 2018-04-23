@@ -68,3 +68,18 @@ $ cat test/dest/test_proto_sub_child__Bar_Status.jsonl
 {"number": 2, "name": "RUNNING"}
 ```
 
+## Integration
+
+### BigQuery
+
+- Convert proto to csv
+
+```
+$ protoc -I. --plugin=path/to/protoc-gen-enummap --enummap_out=./ --enummap_opt=csv target.proto
+```
+
+- Load the csv
+
+```
+$ bq load --replace --source_format=CSV <project_id>:<dataset_id>.<table_name> <path_to_csv> "number:integer,name:string"
+```
