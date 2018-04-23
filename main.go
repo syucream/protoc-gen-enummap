@@ -16,6 +16,16 @@ var formatters = map[string]enumFormatter{
 	"jsonl": &jsonlEnumFormatter{},
 }
 
+func getNested(d interface{}) []*descriptor.DescriptorProto {
+	if fdp, ok := d.(*descriptor.FileDescriptorProto); ok {
+		return fdp.GetMessageType()
+	} else if dp, ok := d.(*descriptor.DescriptorProto); ok {
+		return dp.GetNestedType()
+	} else {
+		return nil
+	}
+}
+
 func getDescName(d interface{}) string {
 	if fdp, ok := d.(*descriptor.FileDescriptorProto); ok {
 		return strings.Replace(fdp.GetPackage(), ".", "_", -1) + "__"
@@ -39,7 +49,7 @@ func appendNestedEnum(file []*plugin.CodeGeneratorResponse_File, formatter enumF
 				Content: proto.String(strings.Join(contents, "")),
 			})
 		}
-		file = appendNestedEnum(file, formatter, descName, d.GetNestedType())
+		file = appendNestedEnum(file, formatter, descName, getNested(d))
 	}
 
 	return file
@@ -74,7 +84,7 @@ func main() {
 				Content: proto.String(strings.Join(contents, "")),
 			})
 		}
-		resp.File = appendNestedEnum(resp.File, formatter, descName, f.GetMessageType())
+		resp.File = appendNestedEnum(resp.File, formatter, descName, getNested(f))
 	}
 
 	buf, err = proto.Marshal(&resp)
