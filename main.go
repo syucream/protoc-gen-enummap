@@ -28,9 +28,7 @@ func appendNestedEnum(file []*plugin.CodeGeneratorResponse_File, formatter enumF
 				Content: proto.String(strings.Join(contents, "")),
 			})
 		}
-	}
 
-	for _, d := range desc {
 		file = appendNestedEnum(file, formatter, prefix+d.GetName()+"_", d.GetNestedType())
 	}
 
