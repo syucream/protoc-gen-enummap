@@ -41,13 +41,9 @@ func appendNestedEnum(file []*plugin.CodeGeneratorResponse_File, formatter enumF
 	for _, d := range desc {
 		descName := prefix + getDescName(d)
 		for _, e := range d.GetEnumType() {
-			var contents []string
-			for _, ev := range e.GetValue() {
-				contents = append(contents, formatter.printLine(ev))
-			}
 			file = append(file, &plugin.CodeGeneratorResponse_File{
 				Name:    proto.String(descName + e.GetName() + formatter.extension()),
-				Content: proto.String(formatter.printHeader(descName+e.GetName()) + strings.Join(contents, "")),
+				Content: proto.String(formatter.printContent(descName+e.GetName(), e.GetValue())),
 			})
 		}
 		file = appendNestedEnum(file, formatter, descName, getNested(d))
@@ -76,13 +72,9 @@ func main() {
 	for _, f := range req.GetProtoFile() {
 		descName := getDescName(f)
 		for _, e := range f.GetEnumType() {
-			var contents []string
-			for _, ev := range e.GetValue() {
-				contents = append(contents, formatter.printLine(ev))
-			}
 			resp.File = append(resp.File, &plugin.CodeGeneratorResponse_File{
 				Name:    proto.String(descName + e.GetName() + formatter.extension()),
-				Content: proto.String(formatter.printHeader(descName+e.GetName()) + strings.Join(contents, "")),
+				Content: proto.String(formatter.printContent(descName+e.GetName(), e.GetValue())),
 			})
 		}
 		resp.File = appendNestedEnum(resp.File, formatter, descName, getNested(f))
