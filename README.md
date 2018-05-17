@@ -16,6 +16,8 @@ $ protoc -I. --plugin=path/to/protoc-gen-enummap --enummap_out=./ --enummap_opt=
 $ cat test/proto/root.proto
 syntax = "proto3";
 
+package root;
+
 enum Status {
   UNKNOWN = 0;
   STARTED = 1;
@@ -32,6 +34,8 @@ message Foo {
 
 $ cat test/proto/sub/child.proto
 syntax = "proto3";
+
+package root.sub;
 
 message Bar {
   enum Status {
@@ -52,17 +56,17 @@ $ protoc -I. --plugin=./protoc-gen-enummap --enummap_opt=jsonl --enummap_out=./t
 
 ```
 $ ls test/dest/
-test_proto_root__Foo_Status.jsonl  test_proto_root__Status.jsonl  test_proto_sub_child__Bar_Status.jsonl
+root__Foo_Status.jsonl  root__Status.jsonl  root_sub__Bar_Status.jsonl
 
-$ cat test/dest/test_proto_root__Foo_Status.jsonl
+$ cat test/dest/root__Foo_Status.jsonl
 {"number": 0, "name": "UNKNOWN"}
 {"number": 1, "name": "STARTED"}
 {"number": 2, "name": "RUNNING"}
-$ cat test/dest/test_proto_root__Status.jsonl
+$ cat test/dest/root__Status.jsonl
 {"number": 0, "name": "UNKNOWN"}
 {"number": 1, "name": "STARTED"}
 {"number": 2, "name": "RUNNING"}
-$ cat test/dest/test_proto_sub_child__Bar_Status.jsonl
+$ cat test/dest/root_sub__Bar_Status.jsonl
 {"number": 0, "name": "UNKNOWN"}
 {"number": 1, "name": "STARTED"}
 {"number": 2, "name": "RUNNING"}

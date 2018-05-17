@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package root;
+
 enum Status {
   UNKNOWN = 0;
   STARTED = 1;
