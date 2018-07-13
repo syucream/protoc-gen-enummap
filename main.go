@@ -30,6 +30,8 @@ func getNested(d interface{}) []*descriptor.DescriptorProto {
 func getDescName(d interface{}) string {
 	if fdp, ok := d.(*descriptor.FileDescriptorProto); ok {
 		return strings.Replace(fdp.GetPackage(), ".", "_", -1)
+	} else if dp, ok := d.(*descriptor.DescriptorProto); ok {
+		return dp.GetName() + "_"
 	} else {
 		return ""
 	}
@@ -52,25 +54,24 @@ func merge(l, r map[string][]ContentEntry) map[string][]ContentEntry {
 	return merged
 }
 
-func appendNestedEnum(formatter enumFormatter, prefix string, desc []*descriptor.DescriptorProto) map[string][]ContentEntry {
+func appendNestedEnum(formatter enumFormatter, baseDescName string, desc []*descriptor.DescriptorProto) map[string][]ContentEntry {
 	entries := make(map[string][]ContentEntry)
 
 	for _, d := range desc {
-		descName := prefix + getDescName(d)
 		for _, e := range d.GetEnumType() {
 			c := ContentEntry{
 				EnumValues:  e.GetValue(),
-				MessageName: e.GetName(),
+				MessageName: getDescName(d) + e.GetName(),
 			}
 
-			v, ok := entries[descName]
+			v, ok := entries[baseDescName]
 			if ok {
-				entries[descName] = append(v, c)
+				entries[baseDescName] = append(v, c)
 			} else {
-				entries[descName] = []ContentEntry{c}
+				entries[baseDescName] = []ContentEntry{c}
 			}
 		}
-		entries = merge(entries, appendNestedEnum(formatter, descName, getNested(d)))
+		entries = merge(entries, appendNestedEnum(formatter, baseDescName, getNested(d)))
 	}
 
 	return entries
