@@ -23,12 +23,17 @@ func getTestEnums() []*descriptor.EnumValueDescriptorProto {
 }
 
 func TestCsvEnumFormatter_printContent(t *testing.T) {
-	enums := getTestEnums()
 	formatter := csvEnumFormatter{}
+	entries := []ContentEntry{
+		ContentEntry{
+			EnumValues:  getTestEnums(),
+			MessageName: "test",
+		},
+	}
 
-	actual := formatter.printContent("", enums)
-	expected := `1,test01
-2,test02
+	actual := formatter.printContent("", entries)
+	expected := `1,test01,test
+2,test02,test
 `
 
 	if actual != expected {
@@ -37,12 +42,17 @@ func TestCsvEnumFormatter_printContent(t *testing.T) {
 }
 
 func TestJsonlEnumFormatter_printContent(t *testing.T) {
-	enums := getTestEnums()
 	formatter := jsonlEnumFormatter{}
+	entries := []ContentEntry{
+		ContentEntry{
+			EnumValues:  getTestEnums(),
+			MessageName: "test",
+		},
+	}
 
-	actual := formatter.printContent("", enums)
-	expected := `{"number": 1, "name": "test01"}
-{"number": 2, "name": "test02"}
+	actual := formatter.printContent("", entries)
+	expected := `{"number": 1, "name": "test01", "message_name": "test"}
+{"number": 2, "name": "test02", "message_name": "test"}
 `
 
 	if actual != expected {
@@ -51,16 +61,22 @@ func TestJsonlEnumFormatter_printContent(t *testing.T) {
 }
 
 func TestSqlEnumFormatter_printContent(t *testing.T) {
-	enums := getTestEnums()
 	formatter := sqlEnumFormatter{}
+	entries := []ContentEntry{
+		ContentEntry{
+			EnumValues:  getTestEnums(),
+			MessageName: "test",
+		},
+	}
 
-	actual := formatter.printContent("test_table", enums)
+	actual := formatter.printContent("test_table", entries)
 	expected := `CREATE TABLE IF NOT EXISTS test_table (
 	number BIGINT UNSIGNED NOT NULL,
-	name VARCHAR(64) NOT NULL
+	name VARCHAR(255) NOT NULL,
+	message_name VARCHAR(255) NOT NULL
 );
-INSERT INTO test_table (number, name) VALUES (1, "test01"); 
-INSERT INTO test_table (number, name) VALUES (2, "test02"); 
+INSERT INTO test_table (number, name, message_name) VALUES (1, "test01", "test"); 
+INSERT INTO test_table (number, name, message_name) VALUES (2, "test02", "test"); 
 `
 
 	if actual != expected {

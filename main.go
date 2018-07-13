@@ -29,27 +29,51 @@ func getNested(d interface{}) []*descriptor.DescriptorProto {
 
 func getDescName(d interface{}) string {
 	if fdp, ok := d.(*descriptor.FileDescriptorProto); ok {
-		return strings.Replace(fdp.GetPackage(), ".", "_", -1) + "__"
-	} else if dp, ok := d.(*descriptor.DescriptorProto); ok {
-		return dp.GetName() + "_"
+		return strings.Replace(fdp.GetPackage(), ".", "_", -1)
 	} else {
 		return ""
 	}
 }
 
-func appendNestedEnum(file []*plugin.CodeGeneratorResponse_File, formatter enumFormatter, prefix string, desc []*descriptor.DescriptorProto) []*plugin.CodeGeneratorResponse_File {
+func merge(l, r map[string][]ContentEntry) map[string][]ContentEntry {
+	merged := make(map[string][]ContentEntry)
+
+	for k, v := range l {
+		merged[k] = v
+	}
+	for k, v := range r {
+		if cur, ok := merged[k]; ok {
+			merged[k] = append(cur, v...)
+		} else {
+			merged[k] = v
+		}
+	}
+
+	return merged
+}
+
+func appendNestedEnum(formatter enumFormatter, prefix string, desc []*descriptor.DescriptorProto) map[string][]ContentEntry {
+	entries := make(map[string][]ContentEntry)
+
 	for _, d := range desc {
 		descName := prefix + getDescName(d)
 		for _, e := range d.GetEnumType() {
-			file = append(file, &plugin.CodeGeneratorResponse_File{
-				Name:    proto.String(descName + e.GetName() + formatter.extension()),
-				Content: proto.String(formatter.printContent(descName+e.GetName(), e.GetValue())),
-			})
+			c := ContentEntry{
+				EnumValues:  e.GetValue(),
+				MessageName: e.GetName(),
+			}
+
+			v, ok := entries[descName]
+			if ok {
+				entries[descName] = append(v, c)
+			} else {
+				entries[descName] = []ContentEntry{c}
+			}
 		}
-		file = appendNestedEnum(file, formatter, descName, getNested(d))
+		entries = merge(entries, appendNestedEnum(formatter, descName, getNested(d)))
 	}
 
-	return file
+	return entries
 }
 
 func main() {
@@ -68,16 +92,30 @@ func main() {
 		log.Fatal("Specify supported format by --enummap_opt=")
 	}
 
-	resp := plugin.CodeGeneratorResponse{}
+	entries := make(map[string][]ContentEntry)
 	for _, f := range req.GetProtoFile() {
 		descName := getDescName(f)
 		for _, e := range f.GetEnumType() {
-			resp.File = append(resp.File, &plugin.CodeGeneratorResponse_File{
-				Name:    proto.String(descName + e.GetName() + formatter.extension()),
-				Content: proto.String(formatter.printContent(descName+e.GetName(), e.GetValue())),
-			})
+			c := ContentEntry{
+				EnumValues:  e.GetValue(),
+				MessageName: e.GetName(),
+			}
+
+			if v, ok := entries[descName]; ok {
+				entries[descName] = append(v, c)
+			} else {
+				entries[descName] = []ContentEntry{c}
+			}
 		}
-		resp.File = appendNestedEnum(resp.File, formatter, descName, getNested(f))
+		entries = merge(entries, appendNestedEnum(formatter, descName, getNested(f)))
+	}
+
+	resp := plugin.CodeGeneratorResponse{}
+	for descName, contentEntries := range entries {
+		resp.File = append(resp.File, &plugin.CodeGeneratorResponse_File{
+			Name:    proto.String(descName + formatter.extension()),
+			Content: proto.String(formatter.printContent(descName, contentEntries)),
+		})
 	}
 
 	buf, err = proto.Marshal(&resp)

@@ -8,18 +8,25 @@ import (
 )
 
 type enumFormatter interface {
-	printContent(string, []*descriptor.EnumValueDescriptorProto) string
+	printContent(string, []ContentEntry) string
 	extension() string
 }
 
 type csvEnumFormatter struct{}
 
-func (f *csvEnumFormatter) printContent(criteria string, evs []*descriptor.EnumValueDescriptorProto) string {
+type ContentEntry struct {
+	EnumValues  []*descriptor.EnumValueDescriptorProto
+	MessageName string
+}
+
+func (f *csvEnumFormatter) printContent(criteria string, entries []ContentEntry) string {
 	var contents []string
 
-	for _, ev := range evs {
-		content := fmt.Sprintf("%d,%s\n", ev.GetNumber(), ev.GetName())
-		contents = append(contents, content)
+	for _, c := range entries {
+		for _, ev := range c.EnumValues {
+			content := fmt.Sprintf("%d,%s,%s\n", ev.GetNumber(), ev.GetName(), c.MessageName)
+			contents = append(contents, content)
+		}
 	}
 
 	return strings.Join(contents, "")
@@ -29,12 +36,14 @@ func (f *csvEnumFormatter) extension() string { return ".csv" }
 
 type jsonlEnumFormatter struct{}
 
-func (f *jsonlEnumFormatter) printContent(criteria string, evs []*descriptor.EnumValueDescriptorProto) string {
+func (f *jsonlEnumFormatter) printContent(criteria string, entries []ContentEntry) string {
 	var contents []string
 
-	for _, ev := range evs {
-		content := fmt.Sprintf("{\"number\": %d, \"name\": \"%s\"}\n", ev.GetNumber(), ev.GetName())
-		contents = append(contents, content)
+	for _, c := range entries {
+		for _, ev := range c.EnumValues {
+			content := fmt.Sprintf("{\"number\": %d, \"name\": \"%s\", \"message_name\": \"%s\"}\n", ev.GetNumber(), ev.GetName(), c.MessageName)
+			contents = append(contents, content)
+		}
 	}
 
 	return strings.Join(contents, "")
@@ -44,18 +53,21 @@ func (f *jsonlEnumFormatter) extension() string { return ".jsonl" }
 
 type sqlEnumFormatter struct{}
 
-func (f *sqlEnumFormatter) printContent(criteria string, evs []*descriptor.EnumValueDescriptorProto) string {
+func (f *sqlEnumFormatter) printContent(criteria string, entries []ContentEntry) string {
 	var contents []string
 
 	contents = append(contents, fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
 	number BIGINT UNSIGNED NOT NULL,
-	name VARCHAR(64) NOT NULL
+	name VARCHAR(255) NOT NULL,
+	message_name VARCHAR(255) NOT NULL
 );
 `, criteria))
 
-	for _, ev := range evs {
-		content := fmt.Sprintf("INSERT INTO %s (number, name) VALUES (%d, \"%s\"); \n", criteria, ev.GetNumber(), ev.GetName())
-		contents = append(contents, content)
+	for _, c := range entries {
+		for _, ev := range c.EnumValues {
+			content := fmt.Sprintf("INSERT INTO %s (number, name, message_name) VALUES (%d, \"%s\", \"%s\"); \n", criteria, ev.GetNumber(), ev.GetName(), c.MessageName)
+			contents = append(contents, content)
+		}
 	}
 
 	return strings.Join(contents, "")
