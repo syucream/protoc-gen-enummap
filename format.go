@@ -49,7 +49,7 @@ func (f *jsonlEnumFormatter) printContent(criteria string, entries []ContentEntr
 	return strings.Join(contents, "")
 }
 
-func (f *jsonlEnumFormatter) extension() string { return ".jsonl" }
+func (f *jsonlEnumFormatter) extension() string { return ".json" }
 
 type sqlEnumFormatter struct{}
 
