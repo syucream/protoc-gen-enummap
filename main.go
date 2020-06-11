@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/golang/protobuf/proto"
-	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 )
 
@@ -37,8 +37,8 @@ func getDescName(d interface{}) string {
 	}
 }
 
-func merge(l, r map[string][]ContentEntry) map[string][]ContentEntry {
-	merged := make(map[string][]ContentEntry)
+func merge(l, r map[string][]*descriptor.EnumDescriptorProto) map[string][]*descriptor.EnumDescriptorProto {
+	merged := make(map[string][]*descriptor.EnumDescriptorProto)
 
 	for k, v := range l {
 		merged[k] = v
@@ -54,21 +54,15 @@ func merge(l, r map[string][]ContentEntry) map[string][]ContentEntry {
 	return merged
 }
 
-func appendNestedEnum(formatter enumFormatter, baseDescName string, desc []*descriptor.DescriptorProto) map[string][]ContentEntry {
-	entries := make(map[string][]ContentEntry)
+func appendNestedEnum(formatter enumFormatter, baseDescName string, desc []*descriptor.DescriptorProto) map[string][]*descriptor.EnumDescriptorProto {
+	entries := make(map[string][]*descriptor.EnumDescriptorProto)
 
 	for _, d := range desc {
 		for _, e := range d.GetEnumType() {
-			c := ContentEntry{
-				EnumValues:  e.GetValue(),
-				MessageName: getDescName(d) + e.GetName(),
-			}
-
-			v, ok := entries[baseDescName]
-			if ok {
-				entries[baseDescName] = append(v, c)
+			if v, ok := entries[baseDescName]; ok {
+				entries[baseDescName] = append(v, e)
 			} else {
-				entries[baseDescName] = []ContentEntry{c}
+				entries[baseDescName] = []*descriptor.EnumDescriptorProto{e}
 			}
 		}
 		entries = merge(entries, appendNestedEnum(formatter, baseDescName, getNested(d)))
@@ -93,19 +87,14 @@ func main() {
 		log.Fatal("Specify supported format by --enummap_opt=")
 	}
 
-	entries := make(map[string][]ContentEntry)
+	entries := make(map[string][]*descriptor.EnumDescriptorProto)
 	for _, f := range req.GetProtoFile() {
 		descName := getDescName(f)
 		for _, e := range f.GetEnumType() {
-			c := ContentEntry{
-				EnumValues:  e.GetValue(),
-				MessageName: e.GetName(),
-			}
-
 			if v, ok := entries[descName]; ok {
-				entries[descName] = append(v, c)
+				entries[descName] = append(v, e)
 			} else {
-				entries[descName] = []ContentEntry{c}
+				entries[descName] = []*descriptor.EnumDescriptorProto{e}
 			}
 		}
 		entries = merge(entries, appendNestedEnum(formatter, descName, getNested(f)))

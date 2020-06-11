@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 )
 
 func ptrStr(v string) *string { return &v }
@@ -11,11 +11,11 @@ func ptrInt(v int32) *int32   { return &v }
 
 func getTestEnums() []*descriptor.EnumValueDescriptorProto {
 	return []*descriptor.EnumValueDescriptorProto{
-		&descriptor.EnumValueDescriptorProto{
+		{
 			Name:   ptrStr("test01"),
 			Number: ptrInt(1),
 		},
-		&descriptor.EnumValueDescriptorProto{
+		{
 			Name:   ptrStr("test02"),
 			Number: ptrInt(2),
 		},
@@ -24,10 +24,10 @@ func getTestEnums() []*descriptor.EnumValueDescriptorProto {
 
 func TestCsvEnumFormatter_printContent(t *testing.T) {
 	formatter := csvEnumFormatter{}
-	entries := []ContentEntry{
-		ContentEntry{
-			EnumValues:  getTestEnums(),
-			MessageName: "test",
+	entries := []*descriptor.EnumDescriptorProto{
+		{
+			Name:  ptrStr("test"),
+			Value: getTestEnums(),
 		},
 	}
 
@@ -43,10 +43,10 @@ func TestCsvEnumFormatter_printContent(t *testing.T) {
 
 func TestJsonlEnumFormatter_printContent(t *testing.T) {
 	formatter := jsonlEnumFormatter{}
-	entries := []ContentEntry{
-		ContentEntry{
-			EnumValues:  getTestEnums(),
-			MessageName: "test",
+	entries := []*descriptor.EnumDescriptorProto{
+		{
+			Name:  ptrStr("test"),
+			Value: getTestEnums(),
 		},
 	}
 
@@ -62,10 +62,10 @@ func TestJsonlEnumFormatter_printContent(t *testing.T) {
 
 func TestSqlEnumFormatter_printContent(t *testing.T) {
 	formatter := sqlEnumFormatter{}
-	entries := []ContentEntry{
-		ContentEntry{
-			EnumValues:  getTestEnums(),
-			MessageName: "test",
+	entries := []*descriptor.EnumDescriptorProto{
+		{
+			Name:  ptrStr("test"),
+			Value: getTestEnums(),
 		},
 	}
 

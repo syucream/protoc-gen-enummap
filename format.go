@@ -7,24 +7,21 @@ import (
 	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 )
 
+// enumFormatter formats enum proto's to specific format.
 type enumFormatter interface {
-	printContent(string, []ContentEntry) string
+	printContent(string, []*descriptor.EnumDescriptorProto) string
 	extension() string
 }
 
+// csvEnumFormatter formats enum proto's to CSV.
 type csvEnumFormatter struct{}
 
-type ContentEntry struct {
-	EnumValues  []*descriptor.EnumValueDescriptorProto
-	MessageName string
-}
-
-func (f *csvEnumFormatter) printContent(criteria string, entries []ContentEntry) string {
+func (f *csvEnumFormatter) printContent(criteria string, entries []*descriptor.EnumDescriptorProto) string {
 	var contents []string
 
-	for _, c := range entries {
-		for _, ev := range c.EnumValues {
-			content := fmt.Sprintf("%d,%s,%s\n", ev.GetNumber(), ev.GetName(), c.MessageName)
+	for _, e := range entries {
+		for _, ev := range e.Value {
+			content := fmt.Sprintf("%d,%s,%s\n", ev.GetNumber(), ev.GetName(), *e.Name)
 			contents = append(contents, content)
 		}
 	}
@@ -34,14 +31,15 @@ func (f *csvEnumFormatter) printContent(criteria string, entries []ContentEntry)
 
 func (f *csvEnumFormatter) extension() string { return ".csv" }
 
+// jsonEnumFormatter formats enum proto's to JSON(Newline delimited).
 type jsonlEnumFormatter struct{}
 
-func (f *jsonlEnumFormatter) printContent(criteria string, entries []ContentEntry) string {
+func (f *jsonlEnumFormatter) printContent(criteria string, entries []*descriptor.EnumDescriptorProto) string {
 	var contents []string
 
-	for _, c := range entries {
-		for _, ev := range c.EnumValues {
-			content := fmt.Sprintf("{\"number\": %d, \"name\": \"%s\", \"message_name\": \"%s\"}\n", ev.GetNumber(), ev.GetName(), c.MessageName)
+	for _, e := range entries {
+		for _, ev := range e.Value {
+			content := fmt.Sprintf("{\"number\": %d, \"name\": \"%s\", \"message_name\": \"%s\"}\n", ev.GetNumber(), ev.GetName(), *e.Name)
 			contents = append(contents, content)
 		}
 	}
@@ -51,9 +49,10 @@ func (f *jsonlEnumFormatter) printContent(criteria string, entries []ContentEntr
 
 func (f *jsonlEnumFormatter) extension() string { return ".json" }
 
+// sqlEnumFormatter formats enum proto's to SQL DDL and DMLs.
 type sqlEnumFormatter struct{}
 
-func (f *sqlEnumFormatter) printContent(criteria string, entries []ContentEntry) string {
+func (f *sqlEnumFormatter) printContent(criteria string, entries []*descriptor.EnumDescriptorProto) string {
 	var contents []string
 
 	contents = append(contents, fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
@@ -63,9 +62,9 @@ func (f *sqlEnumFormatter) printContent(criteria string, entries []ContentEntry)
 );
 `, criteria))
 
-	for _, c := range entries {
-		for _, ev := range c.EnumValues {
-			content := fmt.Sprintf("INSERT INTO %s (number, name, message_name) VALUES (%d, \"%s\", \"%s\"); \n", criteria, ev.GetNumber(), ev.GetName(), c.MessageName)
+	for _, e := range entries {
+		for _, ev := range e.Value {
+			content := fmt.Sprintf("INSERT INTO %s (number, name, message_name) VALUES (%d, \"%s\", \"%s\"); \n", criteria, ev.GetNumber(), ev.GetName(), *e.Name)
 			contents = append(contents, content)
 		}
 	}
