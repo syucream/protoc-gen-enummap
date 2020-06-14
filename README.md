@@ -55,17 +55,18 @@ $ protoc -I. --plugin=./protoc-gen-enummap --enummap_opt=jsonl --enummap_out=./t
 - Then you can get below files.
 
 ```
-$ cat test/dest/root.json
-{"number": 0, "name": "UNKNOWN", "message_name": "Status"}
-{"number": 1, "name": "STARTED", "message_name": "Status"}
-{"number": 2, "name": "RUNNING", "message_name": "Status"}
-{"number": 0, "name": "UNKNOWN", "message_name": "Foo_Status"}
-{"number": 1, "name": "STARTED", "message_name": "Foo_Status"}
-{"number": 2, "name": "RUNNING", "message_name": "Foo_Status"}
-$ cat test/dest/root_sub.json
-{"number": 0, "name": "UNKNOWN", "message_name": "Bar_Status"}
-{"number": 1, "name": "STARTED", "message_name": "Bar_Status"}
-{"number": 2, "name": "RUNNING", "message_name": "Bar_Status"}
+$ cat test/dest/root_Status.json
+{"number": 0, "name": "UNKNOWN"}
+{"number": 1, "name": "STARTED"}
+{"number": 2, "name": "RUNNING"}
+$ cat test/dest/root_Foo_Status.json
+{"number": 0, "name": "UNKNOWN"}
+{"number": 1, "name": "STARTED"}
+{"number": 2, "name": "RUNNING"}
+$ cat test/dest/root_sub_Bar_Status.json
+{"number": 0, "name": "UNKNOWN"}
+{"number": 1, "name": "STARTED"}
+{"number": 2, "name": "RUNNING"}
 ```
 
 ## Integration
