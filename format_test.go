@@ -24,16 +24,14 @@ func getTestEnums() []*descriptor.EnumValueDescriptorProto {
 
 func TestCsvEnumFormatter_printContent(t *testing.T) {
 	formatter := csvEnumFormatter{}
-	entries := []*descriptor.EnumDescriptorProto{
-		{
-			Name:  ptrStr("test"),
-			Value: getTestEnums(),
-		},
+	enum := &descriptor.EnumDescriptorProto{
+		Name:  ptrStr("test"),
+		Value: getTestEnums(),
 	}
 
-	actual := formatter.printContent("", entries)
-	expected := `1,test01,test
-2,test02,test
+	actual := formatter.printContent("", enum)
+	expected := `1,test01
+2,test02
 `
 
 	if actual != expected {
@@ -43,16 +41,14 @@ func TestCsvEnumFormatter_printContent(t *testing.T) {
 
 func TestJsonlEnumFormatter_printContent(t *testing.T) {
 	formatter := jsonlEnumFormatter{}
-	entries := []*descriptor.EnumDescriptorProto{
-		{
-			Name:  ptrStr("test"),
-			Value: getTestEnums(),
-		},
+	enum := &descriptor.EnumDescriptorProto{
+		Name:  ptrStr("test"),
+		Value: getTestEnums(),
 	}
 
-	actual := formatter.printContent("", entries)
-	expected := `{"number": 1, "name": "test01", "message_name": "test"}
-{"number": 2, "name": "test02", "message_name": "test"}
+	actual := formatter.printContent("", enum)
+	expected := `{"number": 1, "name": "test01"}
+{"number": 2, "name": "test02"}
 `
 
 	if actual != expected {
@@ -62,21 +58,18 @@ func TestJsonlEnumFormatter_printContent(t *testing.T) {
 
 func TestSqlEnumFormatter_printContent(t *testing.T) {
 	formatter := sqlEnumFormatter{}
-	entries := []*descriptor.EnumDescriptorProto{
-		{
-			Name:  ptrStr("test"),
-			Value: getTestEnums(),
-		},
+	enum := &descriptor.EnumDescriptorProto{
+		Name:  ptrStr("test"),
+		Value: getTestEnums(),
 	}
 
-	actual := formatter.printContent("test_table", entries)
+	actual := formatter.printContent("test_table", enum)
 	expected := `CREATE TABLE IF NOT EXISTS test_table (
 	number BIGINT UNSIGNED NOT NULL,
-	name VARCHAR(255) NOT NULL,
-	message_name VARCHAR(255) NOT NULL
+	name VARCHAR(255) NOT NULL
 );
-INSERT INTO test_table (number, name, message_name) VALUES (1, "test01", "test"); 
-INSERT INTO test_table (number, name, message_name) VALUES (2, "test02", "test"); 
+INSERT INTO test_table (number, name) VALUES (1, "test01"); 
+INSERT INTO test_table (number, name) VALUES (2, "test02"); 
 `
 
 	if actual != expected {

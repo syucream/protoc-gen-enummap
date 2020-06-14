@@ -17,35 +17,29 @@ var formatters = map[string]enumFormatter{
 	"sql":   &sqlEnumFormatter{},
 }
 
-func merge(l, r map[string][]*descriptor.EnumDescriptorProto) map[string][]*descriptor.EnumDescriptorProto {
-	merged := make(map[string][]*descriptor.EnumDescriptorProto)
+func merge(l, r map[string]*descriptor.EnumDescriptorProto) map[string]*descriptor.EnumDescriptorProto {
+	merged := make(map[string]*descriptor.EnumDescriptorProto)
 
 	for k, v := range l {
 		merged[k] = v
 	}
 	for k, v := range r {
-		if cur, ok := merged[k]; ok {
-			merged[k] = append(cur, v...)
-		} else {
-			merged[k] = v
-		}
+		merged[k] = v // NOTE: Overwrite if value appears
 	}
 
 	return merged
 }
 
-func appendNestedEnum(baseDescName string, desc []*descriptor.DescriptorProto) map[string][]*descriptor.EnumDescriptorProto {
-	entries := make(map[string][]*descriptor.EnumDescriptorProto)
+func appendNestedEnum(parent string, desc []*descriptor.DescriptorProto) map[string]*descriptor.EnumDescriptorProto {
+	entries := make(map[string]*descriptor.EnumDescriptorProto)
 
 	for _, d := range desc {
+		current := parent + "_" + d.GetName()
 		for _, e := range d.GetEnumType() {
-			if v, ok := entries[baseDescName]; ok {
-				entries[baseDescName] = append(v, e)
-			} else {
-				entries[baseDescName] = []*descriptor.EnumDescriptorProto{e}
-			}
+			fqdn := current + "_" + e.GetName()
+			entries[fqdn] = e
 		}
-		entries = merge(entries, appendNestedEnum(baseDescName, d.GetNestedType()))
+		entries = merge(entries, appendNestedEnum(current, d.GetNestedType()))
 	}
 
 	return entries
@@ -67,17 +61,14 @@ func main() {
 		log.Fatal("Specify supported format by --enummap_opt=")
 	}
 
-	entries := make(map[string][]*descriptor.EnumDescriptorProto)
+	entries := make(map[string]*descriptor.EnumDescriptorProto)
 	for _, f := range req.GetProtoFile() {
-		descName := strings.ReplaceAll(f.GetPackage(), ".", "_")
+		current := strings.ReplaceAll(f.GetPackage(), ".", "_")
 		for _, e := range f.GetEnumType() {
-			if v, ok := entries[descName]; ok {
-				entries[descName] = append(v, e)
-			} else {
-				entries[descName] = []*descriptor.EnumDescriptorProto{e}
-			}
+			fqdn := current + "_" + e.GetName()
+			entries[fqdn] = e
 		}
-		entries = merge(entries, appendNestedEnum(descName, f.GetMessageType()))
+		entries = merge(entries, appendNestedEnum(current, f.GetMessageType()))
 	}
 
 	resp := plugin.CodeGeneratorResponse{}
