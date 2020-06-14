@@ -17,17 +17,6 @@ var formatters = map[string]enumFormatter{
 	"sql":   &sqlEnumFormatter{},
 }
 
-func getNested(d interface{}) []*descriptor.DescriptorProto {
-	switch dp := d.(type) {
-	case *descriptor.FileDescriptorProto:
-		return dp.GetMessageType()
-	case *descriptor.DescriptorProto:
-		return dp.GetNestedType()
-	default:
-		return nil
-	}
-}
-
 func merge(l, r map[string][]*descriptor.EnumDescriptorProto) map[string][]*descriptor.EnumDescriptorProto {
 	merged := make(map[string][]*descriptor.EnumDescriptorProto)
 
@@ -45,7 +34,7 @@ func merge(l, r map[string][]*descriptor.EnumDescriptorProto) map[string][]*desc
 	return merged
 }
 
-func appendNestedEnum(formatter enumFormatter, baseDescName string, desc []*descriptor.DescriptorProto) map[string][]*descriptor.EnumDescriptorProto {
+func appendNestedEnum(baseDescName string, desc []*descriptor.DescriptorProto) map[string][]*descriptor.EnumDescriptorProto {
 	entries := make(map[string][]*descriptor.EnumDescriptorProto)
 
 	for _, d := range desc {
@@ -56,7 +45,7 @@ func appendNestedEnum(formatter enumFormatter, baseDescName string, desc []*desc
 				entries[baseDescName] = []*descriptor.EnumDescriptorProto{e}
 			}
 		}
-		entries = merge(entries, appendNestedEnum(formatter, baseDescName, getNested(d)))
+		entries = merge(entries, appendNestedEnum(baseDescName, d.GetNestedType()))
 	}
 
 	return entries
@@ -88,7 +77,7 @@ func main() {
 				entries[descName] = []*descriptor.EnumDescriptorProto{e}
 			}
 		}
-		entries = merge(entries, appendNestedEnum(formatter, descName, getNested(f)))
+		entries = merge(entries, appendNestedEnum(descName, f.GetMessageType()))
 	}
 
 	resp := plugin.CodeGeneratorResponse{}
