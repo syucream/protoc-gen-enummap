@@ -18,22 +18,13 @@ var formatters = map[string]enumFormatter{
 }
 
 func getNested(d interface{}) []*descriptor.DescriptorProto {
-	if fdp, ok := d.(*descriptor.FileDescriptorProto); ok {
-		return fdp.GetMessageType()
-	} else if dp, ok := d.(*descriptor.DescriptorProto); ok {
+	switch dp := d.(type) {
+	case *descriptor.FileDescriptorProto:
+		return dp.GetMessageType()
+	case *descriptor.DescriptorProto:
 		return dp.GetNestedType()
-	} else {
+	default:
 		return nil
-	}
-}
-
-func getDescName(d interface{}) string {
-	if fdp, ok := d.(*descriptor.FileDescriptorProto); ok {
-		return strings.Replace(fdp.GetPackage(), ".", "_", -1)
-	} else if dp, ok := d.(*descriptor.DescriptorProto); ok {
-		return dp.GetName() + "_"
-	} else {
-		return ""
 	}
 }
 
@@ -89,7 +80,7 @@ func main() {
 
 	entries := make(map[string][]*descriptor.EnumDescriptorProto)
 	for _, f := range req.GetProtoFile() {
-		descName := getDescName(f)
+		descName := strings.ReplaceAll(f.GetPackage(), ".", "_")
 		for _, e := range f.GetEnumType() {
 			if v, ok := entries[descName]; ok {
 				entries[descName] = append(v, e)
